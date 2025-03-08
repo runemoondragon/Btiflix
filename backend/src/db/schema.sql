@@ -25,6 +25,19 @@ CREATE TABLE transactions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Scraper Progress Tracking
+CREATE TABLE scraper_progress (
+    key VARCHAR(50) PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Initialize scraper progress
+INSERT INTO scraper_progress (key, value) VALUES 
+    ('last_processed_index', '0'),
+    ('is_running', 'false')
+ON CONFLICT (key) DO NOTHING;
+
 -- Indexing
 CREATE INDEX idx_movies_title ON movies(title);
 CREATE INDEX idx_movies_genre ON movies(genre);

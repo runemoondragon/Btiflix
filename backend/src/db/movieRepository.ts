@@ -45,6 +45,11 @@ export interface MovieData {
   country: string;
 }
 
+// Track scraper progress
+export interface ScraperProgress {
+  lastProcessedIndex: number;
+  isRunning: boolean;
+}
 
 // Function to insert a movie into the database
 export async function insertMovie(movie: MovieData): Promise<void> {
@@ -76,5 +81,73 @@ export async function insertMovie(movie: MovieData): Promise<void> {
     console.log(`✅ Inserted movie: ${movie.title}`);
   } catch (error) {
     console.error(`❌ Error inserting movie ${movie.title}:`, error);
+  }
+}
+
+// Get the last processed index
+export async function getLastProcessedIndex(): Promise<number> {
+  try {
+    const result = await pool.query(
+      `SELECT value FROM scraper_progress WHERE key = 'last_processed_index';`
+    );
+    return parseInt(result.rows[0]?.value || '0', 10);
+  } catch (error) {
+    console.error('Error getting last processed index:', error);
+    return 0;
+  }
+}
+
+// Update the last processed index
+export async function updateLastProcessedIndex(index: number): Promise<void> {
+  try {
+    await pool.query(
+      `INSERT INTO scraper_progress (key, value) 
+       VALUES ('last_processed_index', $1) 
+       ON CONFLICT (key) DO UPDATE SET value = $1;`,
+      [index.toString()]
+    );
+  } catch (error) {
+    console.error('Error updating last processed index:', error);
+  }
+}
+
+// Update scraper running status
+export async function updateScraperStatus(isRunning: boolean): Promise<void> {
+  try {
+    await pool.query(
+      `INSERT INTO scraper_progress (key, value) 
+       VALUES ('is_running', $1) 
+       ON CONFLICT (key) DO UPDATE SET value = $1;`,
+      [isRunning.toString()]
+    );
+  } catch (error) {
+    console.error('Error updating scraper status:', error);
+  }
+}
+
+// Get scraper status
+export async function getScraperStatus(): Promise<ScraperProgress> {
+  try {
+    const result = await pool.query(
+      `SELECT key, value FROM scraper_progress WHERE key IN ('last_processed_index', 'is_running');`
+    );
+    
+    const progress: ScraperProgress = {
+      lastProcessedIndex: 0,
+      isRunning: false
+    };
+    
+    result.rows.forEach(row => {
+      if (row.key === 'last_processed_index') {
+        progress.lastProcessedIndex = parseInt(row.value, 10);
+      } else if (row.key === 'is_running') {
+        progress.isRunning = row.value === 'true';
+      }
+    });
+    
+    return progress;
+  } catch (error) {
+    console.error('Error getting scraper status:', error);
+    return { lastProcessedIndex: 0, isRunning: false };
   }
 }

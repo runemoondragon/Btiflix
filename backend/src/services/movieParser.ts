@@ -2,7 +2,12 @@ import { parseStringPromise } from 'xml2js';
 import fs from 'fs/promises';
 import path from 'path';
 import { fetchMovieDetails } from '../services/scraper';
-import { insertMovie, MovieData } from '../db/movieRepository';
+import { insertMovie, MovieData, updateScraperStatus } from '../db/movieRepository';
+
+interface ScraperResult {
+  processedCount: number;
+  lastProcessedIndex: number;
+}
 
 async function parseXMLFile(filePath: string) {
   try {
@@ -14,35 +19,37 @@ async function parseXMLFile(filePath: string) {
   }
 }
 
-export async function getMoviesFromSitemaps(): Promise<MovieData[]> {
+export async function getMoviesFromSitemaps(startIndex = 0): Promise<ScraperResult> {
   const listPath = path.join(process.cwd(), 'src', 'sitemaps');
   const movies: MovieData[] = [];
+  let lastProcessedIndex = startIndex;
   
   try {
-    // Test with just sitemap-list-1.xml
+    await updateScraperStatus(true);
+    
+    // Only process sitemap-list-1.xml for now
     const sitemapFile = 'sitemap-list-1.xml';
     console.log(`📖 Reading sitemap file: ${sitemapFile}`);
     
     const movieListSitemap = await parseXMLFile(path.join(listPath, sitemapFile));
     
     if (!movieListSitemap?.urlset?.url) {
-      console.error('❌ Invalid sitemap format');
-      return [];
+      console.error(`❌ Invalid sitemap format in ${sitemapFile}`);
+      return { processedCount: 0, lastProcessedIndex };
     }
 
-    // Filter movie URLs and limit to 120
+    // Get all movie URLs without limit
     const movieUrls = movieListSitemap.urlset.url
       .filter((url: any) => url.loc[0].includes('/movie/'))
-      .slice(0, 120);
+      .slice(startIndex);
 
-    console.log(`🎬 Found ${movieUrls.length} movie URLs to process`);
+    console.log(`🎬 Found ${movieUrls.length} movie URLs to process in ${sitemapFile}`);
 
     // Process movies with progress tracking
-    let processed = 0;
-    for (const url of movieUrls) {
+    for (const [index, url] of movieUrls.entries()) {
       try {
         const movieUrl = url.loc[0];
-        console.log(`⏳ Processing (${++processed}/${movieUrls.length}): ${movieUrl}`);
+        console.log(`⏳ Processing (${index + 1}/${movieUrls.length}): ${movieUrl}`);
         
         const details = await fetchMovieDetails(movieUrl);
         
@@ -65,6 +72,7 @@ export async function getMoviesFromSitemaps(): Promise<MovieData[]> {
         // Save to database
         await insertMovie(movieData);
         movies.push(movieData);
+        lastProcessedIndex = startIndex + index + 1;
 
         // Add a small delay to avoid overwhelming the server
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -76,20 +84,29 @@ export async function getMoviesFromSitemaps(): Promise<MovieData[]> {
     }
 
     console.log(`✅ Successfully processed ${movies.length} movies`);
-    return movies;
+    await updateScraperStatus(false);
+    
+    return {
+      processedCount: movies.length,
+      lastProcessedIndex
+    };
     
   } catch (error) {
     console.error('❌ Error in getMoviesFromSitemaps:', error);
-    return movies;
+    await updateScraperStatus(false);
+    return {
+      processedCount: movies.length,
+      lastProcessedIndex
+    };
   }
 }
 
 // Call the function when the script is run directly
 if (require.main === module) {
-  console.log('🚀 Starting movie scraping process...');
-  getMoviesFromSitemaps()
-    .then(movies => {
-      console.log(`✅ Completed! Processed ${movies.length} movies.`);
+  console.log('🚀 Starting movie scraping process from index 120...');
+  getMoviesFromSitemaps(120)
+    .then(result => {
+      console.log(`✅ Completed! Processed ${result.processedCount} movies.`);
       process.exit(0);
     })
     .catch(error => {

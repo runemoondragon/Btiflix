@@ -38,7 +38,7 @@ app.post("/api/payments/create", ((req: Request, res: Response) => {
 // ✅ Example Database Route (Check if connected)
 app.get("/api/movies", async (req: Request, res: Response) => {
   try {
-    const result = await pool.query("SELECT * FROM movies LIMIT 120;");
+    const result = await pool.query("SELECT * FROM movies LIMIT 1500;");
     res.json(result.rows);
   } catch (error) {
     console.error("DB Query Error:", error);

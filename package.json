@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@heroicons/react": "^1.0.6",
+    "@types/pg": "^8.11.11",
+    "axios": "^1.8.1",
+    "cheerio": "^1.0.0",
+    "pg": "^8.13.3"
+  }
+}
