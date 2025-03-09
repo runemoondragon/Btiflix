@@ -6,7 +6,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const rawSearch = searchParams.get('search')?.trim().toLowerCase();
     const movieId = searchParams.get('id')?.trim();
-    const limit = Math.min(parseInt(searchParams.get('limit') || '1200'), 1200);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 50);
 
     console.log("🔍 Search Request Received - Query:", rawSearch || movieId);
 

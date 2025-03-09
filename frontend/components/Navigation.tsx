@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Home, Film, Tv, Flame } from 'lucide-react';
+import { Menu, X, Home, Film, Tv, Flame, Search, Filter, ChevronDown } from 'lucide-react';
 
 const GENRES = [
   'Action', 'Action & Adventure', 'Adventure', 'Animation', 'Biography', 
@@ -12,109 +12,209 @@ const GENRES = [
   'TV Movie', 'War', 'War & Politics', 'Western'
 ];
 
-const COUNTRIES = [
-  'Argentina', 'Australia', 'Austria', 'Belgium', 'Brazil', 'Canada', 'China',
-  'Czech Republic', 'Denmark', 'Finland', 'France', 'Germany', 'Hong Kong',
-  'Hungary', 'India', 'Ireland', 'Israel', 'Italy', 'Japan', 'Luxembourg',
-  'Mexico', 'Netherlands', 'New Zealand', 'Norway', 'Poland', 'Romania',
-  'Russia', 'South Africa', 'South Korea', 'Spain', 'Sweden', 'Switzerland',
-  'Taiwan', 'Thailand', 'United Kingdom', 'United States of America'
-];
+const QUALITY_OPTIONS = ['HD', '4K', 'SD'];
+const RATING_OPTIONS = ['9+', '8+', '7+', '6+', '5+'];
 
 export default function Navigation() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    genre: '',
+    quality: '',
+    rating: ''
+  });
+
+  // Apply filters and search
+  useEffect(() => {
+    const applyFilters = () => {
+      // Here you would typically make an API call with the filters
+      // For now, we'll just log the filter state
+      console.log('Applying filters:', { search, ...filters });
+    };
+
+    const debounceTimer = setTimeout(applyFilters, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [search, filters]);
 
   return (
     <>
-      {/* Top Bar */}
-      <nav className="bg-gray-900 text-white sticky top-0 z-50 flex items-center h-16 px-4">
-        {/* Browse Button */}
-        <button 
-          onClick={() => setIsSidebarOpen(true)}
-          className="flex items-center space-x-2 bg-gray-800 px-4 py-2 rounded-lg hover:bg-gray-700"
-        >
-          <Menu className="w-5 h-5" />
-          <span>Browse</span>
-        </button>
+      {/* Modern Navigation Bar */}
+      <nav className="bg-gray-900/95 backdrop-blur-sm text-white sticky top-0 z-50 border-b border-gray-800">
+        <div className="max-w-[2000px] mx-auto">
+          <div className="flex items-center h-14 px-4 gap-4">
+            {/* Browse Button */}
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="flex items-center space-x-2 hover:text-orange-500 transition-colors text-xs"
+            >
+              <Menu className="w-4 h-4" />
+              <span className="hidden sm:inline">Browse</span>
+            </button>
 
-        {/* Search Bar */}
-        <div className="flex-1 mx-4">
-          <input
-            type="text"
-            placeholder="Enter keywords..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full px-4 py-2 bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-          />
+            {/* Main Navigation Links */}
+            <div className="hidden md:flex space-x-6 text-xs">
+              <Link href="/" className="hover:text-orange-500 transition-colors flex items-center gap-2">
+                <Home className="w-3 h-3" />
+                <span>Home</span>
+              </Link>
+              <Link href="/movies" className="hover:text-orange-500 transition-colors flex items-center gap-2">
+                <Film className="w-3 h-3" />
+                <span>Movies</span>
+              </Link>
+              <Link href="/tv-shows" className="hover:text-orange-500 transition-colors flex items-center gap-2">
+                <Tv className="w-3 h-3" />
+                <span>TV Shows</span>
+              </Link>
+            </div>
+
+            {/* Search and Filter Section */}
+            <div className="flex-1 flex items-center gap-2">
+              <div className="relative flex-1 max-w-xl">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search titles..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-gray-800/50 text-xs pl-8 pr-4 py-1.5 rounded-full border border-gray-700 focus:outline-none focus:border-orange-500 transition-colors"
+                />
+              </div>
+
+              {/* Filter Button */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  className="flex items-center gap-2 text-xs bg-gray-800/50 px-3 py-1.5 rounded-full border border-gray-700 hover:border-orange-500 transition-colors"
+                >
+                  <Filter className="w-3 h-3" />
+                  <span className="hidden sm:inline">Filters</span>
+                  <ChevronDown className="w-3 h-3" />
+                </button>
+
+                {/* Filter Dropdown */}
+                {isFilterOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-gray-900 border border-gray-800 rounded-lg shadow-xl p-4 text-xs">
+                    {/* Genre Filter */}
+                    <div className="mb-4">
+                      <label className="block text-gray-400 mb-2">Genre</label>
+                      <select
+                        value={filters.genre}
+                        onChange={(e) => setFilters({ ...filters, genre: e.target.value })}
+                        className="w-full bg-gray-800 rounded-md px-2 py-1.5 border border-gray-700 focus:border-orange-500 transition-colors"
+                      >
+                        <option value="">All Genres</option>
+                        {GENRES.map((genre) => (
+                          <option key={genre} value={genre}>{genre}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Quality Filter */}
+                    <div className="mb-4">
+                      <label className="block text-gray-400 mb-2">Quality</label>
+                      <div className="flex gap-2">
+                        {QUALITY_OPTIONS.map((quality) => (
+                          <button
+                            key={quality}
+                            onClick={() => setFilters({ ...filters, quality: filters.quality === quality ? '' : quality })}
+                            className={`px-2 py-1 rounded-md border ${
+                              filters.quality === quality
+                                ? 'bg-orange-500 border-orange-600'
+                                : 'bg-gray-800 border-gray-700 hover:border-orange-500'
+                            } transition-colors`}
+                          >
+                            {quality}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Rating Filter */}
+                    <div className="mb-4">
+                      <label className="block text-gray-400 mb-2">Rating</label>
+                      <div className="flex gap-2">
+                        {RATING_OPTIONS.map((rating) => (
+                          <button
+                            key={rating}
+                            onClick={() => setFilters({ ...filters, rating: filters.rating === rating ? '' : rating })}
+                            className={`px-2 py-1 rounded-md border ${
+                              filters.rating === rating
+                                ? 'bg-orange-500 border-orange-600'
+                                : 'bg-gray-800 border-gray-700 hover:border-orange-500'
+                            } transition-colors`}
+                          >
+                            {rating}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Reset Filters */}
+                    <button
+                      onClick={() => setFilters({ genre: '', quality: '', rating: '' })}
+                      className="w-full bg-gray-800 hover:bg-gray-700 text-center py-1.5 rounded-md transition-colors"
+                    >
+                      Reset Filters
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </nav>
 
       {/* Sidebar Overlay */}
       {isSidebarOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => setIsSidebarOpen(false)}></div>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={() => setIsSidebarOpen(false)} />
       )}
 
       {/* Sidebar Menu */}
       <div 
-        className={`fixed top-0 left-0 w-80 h-full bg-gray-900 text-white p-6 transform ${
+        className={`fixed top-0 left-0 w-64 h-full bg-gray-900/95 backdrop-blur-sm text-white p-4 transform ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } transition-transform duration-300 z-50 flex flex-col`}
+        } transition-transform duration-300 ease-in-out z-50 flex flex-col border-r border-gray-800`}
       >
-        {/* Close Button */}
-        <button className="absolute top-4 right-4" onClick={() => setIsSidebarOpen(false)}>
-          <X className="w-6 h-6" />
+        <button className="absolute top-4 right-4 hover:text-orange-500 transition-colors" onClick={() => setIsSidebarOpen(false)}>
+          <X className="w-4 h-4" />
         </button>
 
-        
-        {/* Navigation Links with Icons */}
-        <div className="space-y-4 mb-6 text-sm">
-          <Link href="/" className="flex items-center space-x-3 hover:text-orange-500">
-            <Home className="w-5 h-5" />
-            <span>Home</span>
-          </Link>
-          <Link href="/movies" className="flex items-center space-x-3 hover:text-orange-500">
-            <Film className="w-5 h-5" />
-            <span>Movies</span>
-          </Link>
-          <Link href="/tv-shows" className="flex items-center space-x-3 hover:text-orange-500">
-            <Tv className="w-5 h-5" />
-            <span>TV Shows</span>
-          </Link>
-          <Link href="/top-imdb" className="flex items-center space-x-3 hover:text-orange-500">
-            <Flame className="w-5 h-5" />
-            <span>Top IMDB</span>
-          </Link>
-        </div>
-
-        {/* Scrollable Content for Genres and Countries */}
-        <div className="overflow-y-auto flex-1 pr-2">
-          {/* Genre Section */}
-          <h3 className="text-lg font-medium mb-2">Genre</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {GENRES.map((genre) => (
-              <Link 
-                key={genre} 
-                href={`/genre/${genre.toLowerCase()}`} 
-                className="bg-gray-800 text-white text-xs px-3 py-1 rounded-md hover:bg-gray-700 text-center"
-              >
-                {genre}
-              </Link>
-            ))}
+        <div className="mt-8 space-y-6">
+          {/* Navigation Links */}
+          <div className="space-y-2 text-xs">
+            <Link href="/" className="flex items-center space-x-3 hover:text-orange-500 transition-colors py-1">
+              <Home className="w-3 h-3" />
+              <span>Home</span>
+            </Link>
+            <Link href="/movies" className="flex items-center space-x-3 hover:text-orange-500 transition-colors py-1">
+              <Film className="w-3 h-3" />
+              <span>Movies</span>
+            </Link>
+            <Link href="/tv-shows" className="flex items-center space-x-3 hover:text-orange-500 transition-colors py-1">
+              <Tv className="w-3 h-3" />
+              <span>TV Shows</span>
+            </Link>
+            <Link href="/top-imdb" className="flex items-center space-x-3 hover:text-orange-500 transition-colors py-1">
+              <Flame className="w-3 h-3" />
+              <span>Top IMDB</span>
+            </Link>
           </div>
 
-          {/* Country Section */}
-          <h3 className="text-lg font-medium mt-6 mb-2">Country</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {COUNTRIES.map((country) => (
-              <Link 
-                key={country} 
-                href={`/country/${country.toLowerCase()}`} 
-                className="bg-gray-800 text-white text-xs px-3 py-1 rounded-md hover:bg-gray-700 text-center"
-              >
-                {country}
-              </Link>
-            ))}
+          {/* Genres */}
+          <div>
+            <h3 className="text-xs font-medium mb-2 text-gray-400">Genres</h3>
+            <div className="grid grid-cols-2 gap-1 text-[10px]">
+              {GENRES.map((genre) => (
+                <Link 
+                  key={genre} 
+                  href={`/genre/${genre.toLowerCase()}`} 
+                  className="px-2 py-1 rounded hover:bg-gray-800 transition-colors"
+                >
+                  {genre}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </div>
