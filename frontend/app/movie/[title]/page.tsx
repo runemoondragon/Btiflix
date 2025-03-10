@@ -115,7 +115,7 @@ export default function MoviePage() {
               )}
               {movie.rating && (
                 <span className="bg-orange-500 text-white px-2 py-0.5 rounded flex items-center gap-1">
-                  <Star className="w-3 h-3" /> {movie.rating}
+                  IMDB: {movie.rating}
                 </span>
               )}
             </div>
