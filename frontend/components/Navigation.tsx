@@ -14,6 +14,7 @@ const GENRES = [
 
 const QUALITY_OPTIONS = ['HD', '4K', 'SD'];
 const RATING_OPTIONS = ['9+', '8+', '7+', '6+', '5+'];
+const YEARS = Array.from({ length: 25 }, (_, i) => (new Date().getFullYear() - i).toString());
 
 export default function Navigation() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -22,15 +23,33 @@ export default function Navigation() {
   const [filters, setFilters] = useState({
     genre: '',
     quality: '',
-    rating: ''
+    rating: '',
+    year: ''
   });
 
-  // Apply filters and search
+  // Apply filters and search with debounce
   useEffect(() => {
     const applyFilters = () => {
-      // Here you would typically make an API call with the filters
-      // For now, we'll just log the filter state
-      console.log('Applying filters:', { search, ...filters });
+      // Format filters before dispatching
+      const formattedFilters = {
+        ...filters,
+        genre: filters.genre,
+        quality: filters.quality.toUpperCase(),
+        rating: filters.rating ? filters.rating.replace(/[^0-9]/g, '') : '',
+        year: filters.year
+      };
+
+      // Dispatch event with current filters and search
+      const event = new CustomEvent('updateFilters', {
+        detail: { 
+          filters: formattedFilters,
+          search: search.trim()
+        }
+      });
+      window.dispatchEvent(event);
+
+      // Log filter application for debugging
+      console.log('Applying filters:', { search: search.trim(), ...formattedFilters });
     };
 
     const debounceTimer = setTimeout(applyFilters, 300);
@@ -43,14 +62,14 @@ export default function Navigation() {
       <nav className="bg-gray-900/95 backdrop-blur-sm text-white sticky top-0 z-50 border-b border-gray-800">
         <div className="max-w-[2000px] mx-auto">
           <div className="flex items-center h-14 px-4 gap-4">
-            {/* Browse Button */}
-            <button 
-              onClick={() => setIsSidebarOpen(true)}
+        {/* Browse Button */}
+        <button 
+          onClick={() => setIsSidebarOpen(true)}
               className="flex items-center space-x-2 hover:text-orange-500 transition-colors text-xs"
-            >
+        >
               <Menu className="w-4 h-4" />
               <span className="hidden sm:inline">Browse</span>
-            </button>
+        </button>
 
             {/* Main Navigation Links */}
             <div className="hidden md:flex space-x-6 text-xs">
@@ -72,11 +91,11 @@ export default function Navigation() {
             <div className="flex-1 flex items-center gap-2">
               <div className="relative flex-1 max-w-xl">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
-                <input
-                  type="text"
+          <input
+            type="text"
                   placeholder="Search titles..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
                   className="w-full bg-gray-800/50 text-xs pl-8 pr-4 py-1.5 rounded-full border border-gray-700 focus:outline-none focus:border-orange-500 transition-colors"
                 />
               </div>
@@ -106,6 +125,21 @@ export default function Navigation() {
                         <option value="">All Genres</option>
                         {GENRES.map((genre) => (
                           <option key={genre} value={genre}>{genre}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Year Filter */}
+                    <div className="mb-4">
+                      <label className="block text-gray-400 mb-2">Year</label>
+                      <select
+                        value={filters.year}
+                        onChange={(e) => setFilters({ ...filters, year: e.target.value })}
+                        className="w-full bg-gray-800 rounded-md px-2 py-1.5 border border-gray-700 focus:border-orange-500 transition-colors"
+                      >
+                        <option value="">All Years</option>
+                        {YEARS.map((year) => (
+                          <option key={year} value={year}>{year}</option>
                         ))}
                       </select>
                     </div>
@@ -152,7 +186,7 @@ export default function Navigation() {
 
                     {/* Reset Filters */}
                     <button
-                      onClick={() => setFilters({ genre: '', quality: '', rating: '' })}
+                      onClick={() => setFilters({ genre: '', quality: '', rating: '', year: '' })}
                       className="w-full bg-gray-800 hover:bg-gray-700 text-center py-1.5 rounded-md transition-colors"
                     >
                       Reset Filters
@@ -185,36 +219,36 @@ export default function Navigation() {
           <div className="space-y-2 text-xs">
             <Link href="/" className="flex items-center space-x-3 hover:text-orange-500 transition-colors py-1">
               <Home className="w-3 h-3" />
-              <span>Home</span>
-            </Link>
+            <span>Home</span>
+          </Link>
             <Link href="/movies" className="flex items-center space-x-3 hover:text-orange-500 transition-colors py-1">
               <Film className="w-3 h-3" />
-              <span>Movies</span>
-            </Link>
+            <span>Movies</span>
+          </Link>
             <Link href="/tv-shows" className="flex items-center space-x-3 hover:text-orange-500 transition-colors py-1">
               <Tv className="w-3 h-3" />
-              <span>TV Shows</span>
-            </Link>
+            <span>TV Shows</span>
+          </Link>
             <Link href="/top-imdb" className="flex items-center space-x-3 hover:text-orange-500 transition-colors py-1">
               <Flame className="w-3 h-3" />
-              <span>Top IMDB</span>
-            </Link>
-          </div>
+            <span>Top IMDB</span>
+          </Link>
+        </div>
 
           {/* Genres */}
           <div>
             <h3 className="text-xs font-medium mb-2 text-gray-400">Genres</h3>
             <div className="grid grid-cols-2 gap-1 text-[10px]">
-              {GENRES.map((genre) => (
-                <Link 
-                  key={genre} 
-                  href={`/genre/${genre.toLowerCase()}`} 
+            {GENRES.map((genre) => (
+              <Link 
+                key={genre} 
+                href={`/genre/${genre.toLowerCase()}`} 
                   className="px-2 py-1 rounded hover:bg-gray-800 transition-colors"
-                >
-                  {genre}
-                </Link>
-              ))}
-            </div>
+              >
+                {genre}
+              </Link>
+            ))}
+          </div>
           </div>
         </div>
       </div>
