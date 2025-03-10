@@ -7,7 +7,7 @@ const pool = new Pool({
   user: process.env.DB_USER || 'postgres',
   host: process.env.DB_HOST || 'localhost',
   database: process.env.DB_NAME || 'btiflix',
-  password: process.env.DB_PASSWORD || 'BTImatter',
+  password: process.env.DB_PASSWORD || 'BTIonelove',
   port: Number(process.env.DB_PORT) || 5432,
 });
 
